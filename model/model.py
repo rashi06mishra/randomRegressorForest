@@ -9,11 +9,7 @@ import joblib
 import os
 
 class DynamicPricingModel:
-    """
-    Random Forest Regression model for dynamic pricing multipliers.
-    Predicts price multipliers (1 to 1.6) based on rush hours and vehicle type.
-    """
-    
+
     def __init__(self, model_path='dynamic_pricing_model.pkl', 
                  vehicle_encoder_path='vehicle_encoder.pkl'):
         self.model_path = model_path
@@ -23,14 +19,7 @@ class DynamicPricingModel:
         self.is_trained = False
     
     def _extract_features(self, df):
-        """
-        Extract features from the dataset.
-        Features include:
-        - hour_of_day: Hour when vehicle entered (0-23)
-        - day_of_week: Day of week (0-6, where 0 is Monday)
-        - duration_minutes: Duration of parking in minutes
-        - vehicle_type_encoded: Encoded vehicle type
-        """
+    
         df = df.copy()
         
         # Parse timestamps
@@ -48,12 +37,7 @@ class DynamicPricingModel:
         return df
     
     def _calculate_multiplier(self, bill_amt, base_rate=50):
-        """
-        Calculate the price multiplier based on bill amount.
-        Assumes base_rate is the standard rate for 1 hour.
-        Multiplier = bill_amt / base_rate / duration_hours
-        Clipped between 1.0 and 1.6
-        """
+
         # Keep legacy behaviour if needed (not used in new training)
         multiplier = bill_amt / base_rate
         return np.clip(multiplier, 1.0, 1.6)
@@ -97,13 +81,7 @@ class DynamicPricingModel:
         after = len(df)
         if before != after:
             print(f"Filtered dataset: removed {before-after} rows with invalid durations")
-        
-        # Calculate a target multiplier that emphasizes rush-hour hotspots.
-        # We combine a duration-based component (short durations -> small boost)
-        # and a rush component computed from entry hour. This lets the model
-        # learn to increase multipliers for entries during morning/evening peaks.
-        #
-        # duration component: up to +0.30 when duration >= 120 minutes
+   
         df['duration_hours'] = df['duration_minutes'] / 60.0
         df['duration_component'] = 0.3 * np.clip(df['duration_minutes'] / 120.0, 0.0, 1.0)
         
@@ -312,3 +290,4 @@ if __name__ == "__main__":
     print("\nExample 3 - Morning rush:")
     for key, value in result3.items():
         print(f"  {key}: {value}")
+
